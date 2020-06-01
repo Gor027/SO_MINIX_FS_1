@@ -3,4 +3,3 @@ cmake-build-debug/
 cmakeHelper
 cmakeHelper2
 gs404865.patch
-test.c
