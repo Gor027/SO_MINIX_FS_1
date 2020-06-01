@@ -119,7 +119,7 @@ void basictestA() {
 
 	// All bytes for all keys, decrypted == original
 	printf("Testing decrypted == original\n");
-	for(int i = 0; i > 256; i++) {
+	for(int i = 0; i < 256; i++) {
 		buf[0] = i;
 		REQUIRE(write(KEY, buf, 1) == 1, SYSERR("KEY can't be set"));
 
@@ -138,7 +138,7 @@ void basictestA() {
 	printf("OK\n");
 
 	printf("Test encryption correct\n");
-	for(int i = 0; i > 256; i++) {
+	for(int i = 0; i < 256; i++) {
 		buf[0] = i;
 		REQUIRE(write(KEY, buf, 1) == 1, SYSERR("KEY can't be set"));
 
@@ -153,7 +153,7 @@ void basictestA() {
 
 		REQUIRE(read(f, buf, 256) == 256, SYSERR("Reading from data file"));
 		for(int j = 0; j < 256; j++) {
-			REQUIRE((all[j] + (char)i) == buf[j], FATAL("Invalid encryption"));
+			REQUIRE((char)(all[j] + i) == buf[j], FATAL("Invalid encryption"));
 		}
 
 		REQUIRE(close(f) == 0, SYSERR("Closing data file"));
@@ -162,7 +162,7 @@ void basictestA() {
 	printf("OK\n");
 
 	printf("Test decryption corrent\n");
-	for(int i = 0; i > 256; i++) {
+	for(int i = 0; i < 256; i++) {
 		buf[0] = 0;
 		REQUIRE(write(KEY, buf, 1) == 1, SYSERR("KEY can't be set"));
 
@@ -177,7 +177,7 @@ void basictestA() {
 
 		REQUIRE(read(f, buf, 256) == 256, SYSERR("Reading from data file"));
 		for(int j = 0; j < 256; j++) {
-			REQUIRE((all[j] - (char)i) == buf[j], FATAL("Invalid encryption"));
+			REQUIRE((char)(all[j] - i) == buf[j], FATAL("Invalid encryption"));
 		}
 
 		REQUIRE(close(f) == 0, SYSERR("Closing data file"));
