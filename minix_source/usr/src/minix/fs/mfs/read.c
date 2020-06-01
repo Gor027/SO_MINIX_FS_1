@@ -107,9 +107,9 @@ int fs_readwrite(void)
             return EPERM;
         }
 
-        isNotEncFound = 1;
+        isNotEncGiven = 1;
     } else {
-        isNotEncFound = 0;
+        isNotEncGiven = 0;
 
         if (isKeyGiven == 1) {
             /* KEY for encryption/decryption is given */
@@ -176,26 +176,32 @@ int fs_readwrite(void)
   fs_m_out.m_fs_vfs_readwrite.seek_pos = position; /* It might change later and
 						    the VFS has to know this
 						    value */
-  
-  /* On write, update file size and access time. */
-  if (rw_flag == WRITING) {
-	  if (regular || mode_word == I_DIRECTORY) {
-		  if (position > f_size) rip->i_size = position;
-	  }
-  } 
+
+  /* File size and access time modifications does not apply to KEY file */
+  if (rip->i_num != keyINO_T) {
+      /* On write, update file size and access time. */
+      if (rw_flag == WRITING) {
+          if (regular || mode_word == I_DIRECTORY) {
+              if (position > f_size) rip->i_size = position;
+          }
+      }
+  }
 
   rip->i_seek = NO_SEEK;
 
   if (lmfs_rdwt_err() != OK) r = lmfs_rdwt_err();	/* check for disk error */
   if (lmfs_rdwt_err() == END_OF_FILE) r = OK;
 
-  /* even on a ROFS, writing to a device node on it is fine, 
-   * just don't update the inode stats for it. And dito for reading.
-   */
-  if (r == OK && !rip->i_sp->s_rd_only) {
-	  if (rw_flag == READING) rip->i_update |= ATIME;
-	  if (rw_flag == WRITING) rip->i_update |= CTIME | MTIME;
-	  IN_MARKDIRTY(rip);		/* inode is thus now dirty */
+  /* The updates does not apply to KEY file. */
+  if (rip->i_num != keyINO_T) {
+      /* even on a ROFS, writing to a device node on it is fine,
+       * just don't update the inode stats for it. And dito for reading.
+       */
+      if (r == OK && !rip->i_sp->s_rd_only) {
+          if (rw_flag == READING) rip->i_update |= ATIME;
+          if (rw_flag == WRITING) rip->i_update |= CTIME | MTIME;
+          IN_MARKDIRTY(rip);        /* inode is thus now dirty */
+      }
   }
   
   fs_m_out.m_fs_vfs_readwrite.nbytes = cum_io;
@@ -205,7 +211,7 @@ int fs_readwrite(void)
 
 
 /*===========================================================================*
- *				fs_breadwrite				     *
+ *				fs_breadwrite				     *printf '\x2A' > ./KEY
  *===========================================================================*/
 int fs_breadwrite(void)
 {
@@ -404,8 +410,9 @@ int *completed;			/* number of bytes copied */
               }
           }
 
-          MARKDIRTY(bp);
       }
+
+      MARKDIRTY(bp);
   }
   
   n = (off + chunk == block_size ? FULL_DATA_BLOCK : PARTIAL_DATA_BLOCK);
